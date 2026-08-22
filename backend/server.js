@@ -3,7 +3,6 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const cron = require("node-cron");
 
 const connectDB = require("./config/db");
 const productRoutes = require("./routes/productRoutes");
@@ -14,9 +13,17 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error("Origin is not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
@@ -41,14 +48,6 @@ app.get("/api/health", (req, res) => {
     status: "ok",
     message: "Iniya Sugar API is running",
   });
-});
-
-// ================================
-// NODE CRON
-// ================================
-
-cron.schedule("*/10 * * * *", () => {
-  console.log("🍬 Iniya Sugar cron job executed:", new Date().toISOString());
 });
 
 // 404 handler
