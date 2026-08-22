@@ -1,9 +1,34 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { GiSugarCane } from "react-icons/gi";
-import { FiAward, FiCheckCircle, FiDroplet, FiHeart, FiHome, FiMail, FiMapPin, FiPhone } from "react-icons/fi";
+import { GiSugarCane, GiScythe, GiFactory, GiMagnifyingGlass, GiCardboardBox } from "react-icons/gi";
+import { FiAward, FiCheckCircle, FiHeart, FiUsers, FiMail, FiMapPin, FiPhone } from "react-icons/fi";
 import { fetchCatalog } from "../data/catalog";
 import ProductCard from "../components/ProductCard";
+
+const FEATURED_COUNT = 3;
+
+const aboutValues = [
+  "Sourced from trusted Tamil Nadu sugarcane farms",
+  "Careful, quality-first sourcing process",
+  "Hygienic, controlled processing",
+  "Careful, tamper-proof packaging",
+  "A genuine customer-first approach",
+];
+
+const processSteps = [
+  { icon: <GiSugarCane />, en: "Sugarcane Farming", ta: "கரும்பு விவசாயம்", desc: "Sugarcane is cultivated with care." },
+  { icon: <GiScythe />, en: "Harvesting", ta: "அறுவடை", desc: "Mature sugarcane is carefully harvested." },
+  { icon: <GiFactory />, en: "Processing", ta: "செயலாக்கம்", desc: "Sugarcane is processed under controlled conditions." },
+  { icon: <GiMagnifyingGlass />, en: "Quality Check", ta: "தர பரிசோதனை", desc: "The sugar goes through quality checks." },
+  { icon: <GiCardboardBox />, en: "Packing & Delivery", ta: "பேக்கிங் & டெலிவரி", desc: "The finished product is hygienically packed and delivered to customers." },
+];
+
+const achievements = [
+  { year: "01", icon: <FiAward />, title: "Consistent quality", text: "Every pack is selected and checked with the same care we give our own kitchens." },
+  { year: "02", icon: <FiCheckCircle />, title: "Trusted preparation", text: "A clean, careful process from sugarcane selection to hygienic packing." },
+  { year: "03", icon: <FiHeart />, title: "Made for families", text: "Simple sweetness for everyday tea, traditional recipes, and special moments." },
+  { year: "04", icon: <FiUsers />, title: "Growing together", text: "Building a dependable local brand with customers at the centre of every decision." },
+];
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -14,14 +39,23 @@ export default function Home() {
   }, []);
 
   return (
-    <>
+    <div className="home-page">
       {/* HERO */}
       <section className="hero">
-        <div className="hero-pattern" aria-hidden="true"></div>
+        <div className="hero-media">
+          <img
+            src="https://imgs.search.brave.com/rEtxYeh4VAeqLQTqTIzqWgnl4rrK0JQEM0l9RcheLtQ/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWcu/bWFnbmlmaWMuY29t/L3ByZW1pdW0tcGhv/dG8vc3VnYXJjYW5l/LXBsYW50ZWQtcHJv/ZHVjZS1zdWdhcl83/NTg3NDAtMTA3OS5q/cGc_c2VtdD1haXNf/aHlicmlkJnc9NzQw/JnE9ODA"
+            alt="Freshly harvested sugarcane and pure Iniya Sugar"
+            className="hero-media-img"
+            onError={(event) => { event.currentTarget.style.display = "none"; }}
+          />
+          <div className="hero-scrim" aria-hidden="true"></div>
+        </div>
+
         <div className="container hero-inner">
           <div className="hero-content">
             <p className="hero-eyebrow">
-              <GiSugarCane /> தமிழ்நாட்டின் தூய சர்க்கரை
+              <GiSugarCane /> Pure Sugar, From Tamil Nadu
             </p>
             <h1 className="hero-tamil">ஒவ்வொரு தேநீரிலும் இனிமை</h1>
             <p className="hero-english">Sweetness in Every Spoon</p>
@@ -32,117 +66,143 @@ export default function Home() {
               <Link to="/products" className="btn btn-primary">
                 Shop Now
               </Link>
-              <Link to="/about" className="btn btn-outline">
-                எங்களை பற்றி
-              </Link>
-            </div>
-          </div>
-
-          <div className="hero-image" role="img" aria-label="Sugarcane farm illustration">
-            <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="200" cy="200" r="190" fill="#E7EFD8" />
-              <rect x="60" y="180" width="14" height="160" fill="#4D7C0F" />
-              <rect x="100" y="150" width="14" height="190" fill="#5C8A22" />
-              <rect x="140" y="170" width="14" height="170" fill="#4D7C0F" />
-              <rect x="250" y="160" width="14" height="180" fill="#5C8A22" />
-              <rect x="290" y="185" width="14" height="155" fill="#4D7C0F" />
-              <rect x="330" y="150" width="14" height="190" fill="#5C8A22" />
-              <path d="M60 180 Q 67 150 90 155" stroke="#3F6412" strokeWidth="6" fill="none" />
-              <path d="M114 150 Q 121 120 145 128" stroke="#3F6412" strokeWidth="6" fill="none" />
-              <path d="M330 150 Q 337 120 360 128" stroke="#3F6412" strokeWidth="6" fill="none" />
-              <ellipse cx="200" cy="345" rx="150" ry="18" fill="#B7D2BD" />
-              <circle cx="200" cy="260" r="55" fill="#E36B45" opacity="0.15" />
-              <text x="200" y="270" fontFamily="Georgia, serif" fontSize="20" textAnchor="middle" fill="#173B3F">இனியா</text>
-            </svg>
-          </div>
-        </div>
-      </section>
-
-      {/* WHY CHOOSE US */}
-      <section className="section">
-        <div className="container">
-          <h2 className="section-title">Why Choose Iniya Sugar</h2>
-          <div className="why-grid">
-            <div className="why-card">
-              <FiCheckCircle className="why-icon" />
-              <h3>100% Quality</h3>
-              <p>Carefully selected sugar for consistent quality.</p>
-            </div>
-            <div className="why-card">
-              <FiDroplet className="why-icon" />
-              <h3>Pure & Fresh</h3>
-              <p>Cleanly processed and packed.</p>
-            </div>
-            <div className="why-card">
-              <FiHeart className="why-icon" />
-              <h3>Trusted Taste</h3>
-              <p>Made for Indian families and traditional recipes.</p>
-            </div>
-            <div className="why-card">
-              <FiHome className="why-icon" />
-              <h3>Farm to Home</h3>
-              <p>Quality sugar brought closer to your kitchen.</p>
+              <a href="#about" className="btn btn-outline btn-on-image">
+                About Us
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* FEATURED PRODUCTS */}
-      <section className="section section-alt">
+      <section id="products" className="section section-alt">
         <div className="container">
           <h2 className="section-title">Featured Products</h2>
           <div className="product-grid">
-            {products.map((product) => (
+            {products.slice(0, FEATURED_COUNT).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
           <div className="section-cta">
             <Link to="/products" className="btn btn-primary">
-              View All Products
+              See More
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="section home-process">
-        <div className="container">
-          <div className="home-section-heading">
-            <div>
-              <p className="section-eyebrow">எங்கள் செயல்முறை</p>
-              <h2 className="section-title">From Farm to Home</h2>
-            </div>
-            <Link to="/process" className="text-link">See our process →</Link>
+      {/* ABOUT */}
+      <section id="about" className="section">
+        <div className="container about-inner">
+          <div className="about-text">
+            <p className="section-eyebrow">எங்கள் கதை</p>
+            <h2 className="section-title-lg">Our Story</h2>
+            <p>
+              Iniya Sugar was born from the rich agricultural traditions of Tamil
+              Nadu, where sugarcane farming has been a way of life for generations.
+              Our name, "Iniya" — meaning "sweet" in Tamil — reflects our promise
+              to bring pure, honest sweetness into every Indian home.
+            </p>
+            <p>
+              We work closely with sugarcane farms across Tamil Nadu, carefully
+              selecting quality cane and processing it under controlled,
+              hygienic conditions. Every batch is checked for purity before it is
+              packed and delivered — because we believe a family's kitchen
+              deserves nothing less.
+            </p>
+            <p>
+              From our farms to your home, Iniya Sugar carries forward a
+              tradition of trust, care, and natural sweetness — one spoon at a
+              time.
+            </p>
+
+            <ul className="about-values">
+              {aboutValues.map((value) => (
+                <li key={value}>
+                  <FiCheckCircle /> <span>{value}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="process-strip">
-            <div className="process-item"><span>01</span><h3>Farm</h3><p>Carefully grown sugarcane.</p></div>
-            <div className="process-item"><span>02</span><h3>Process</h3><p>Clean, controlled production.</p></div>
-            <div className="process-item"><span>03</span><h3>Check</h3><p>Quality checked every time.</p></div>
-            <div className="process-item"><span>04</span><h3>Deliver</h3><p>Packed fresh for your home.</p></div>
+
+          <div className="about-image">
+            <svg viewBox="0 0 400 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tamil Nadu sugarcane farmland">
+              <rect width="400" height="460" fill="#F3E8CE" rx="16" />
+              <rect x="0" y="300" width="400" height="160" fill="#E4CE9C" />
+              <rect x="40" y="120" width="16" height="200" fill="#4D7C0F" />
+              <rect x="80" y="90" width="16" height="230" fill="#5C8A22" />
+              <rect x="120" y="130" width="16" height="190" fill="#4D7C0F" />
+              <rect x="200" y="100" width="16" height="220" fill="#5C8A22" />
+              <rect x="240" y="140" width="16" height="180" fill="#4D7C0F" />
+              <rect x="290" y="90" width="16" height="230" fill="#5C8A22" />
+              <rect x="330" y="130" width="16" height="190" fill="#4D7C0F" />
+              <circle cx="330" cy="60" r="40" fill="#F5B942" opacity="0.8" />
+            </svg>
           </div>
         </div>
       </section>
 
-      <section className="section achievements-preview">
+      {/* PROCESS */}
+      <section id="process" className="section">
         <div className="container">
-          <div className="home-section-heading">
+          <p className="section-eyebrow">எங்கள் செயல்முறை</p>
+          <h2 className="section-title-lg">From Farm to Your Home</h2>
+          <p className="section-subtitle">
+            A simple, transparent journey — five steps from sugarcane field to
+            your kitchen shelf.
+          </p>
+
+          <div className="timeline">
+            {processSteps.map((step, index) => (
+              <div className="timeline-step" key={step.en}>
+                <div className="timeline-marker">
+                  <span className="timeline-icon">{step.icon}</span>
+                  <span className="timeline-number">{index + 1}</span>
+                </div>
+                <div className="timeline-content">
+                  <p className="timeline-tamil">{step.ta}</p>
+                  <h3>{step.en}</h3>
+                  <p>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ACHIEVEMENTS */}
+      <section id="achievements" className="section section-alt achievements-page">
+        <div className="container">
+          <div className="achievements-hero">
             <div>
               <p className="section-eyebrow">எங்கள் சாதனைகள்</p>
-              <h2 className="section-title">What we stand for</h2>
+              <h2 className="section-title-lg">Small steps. Sweet milestones.</h2>
+              <p className="section-subtitle">Our achievements are measured in quality, trust, and the everyday kitchens we reach.</p>
             </div>
-            <Link to="/achievements" className="text-link">Our achievements →</Link>
+            <div className="achievements-score"><strong>100%</strong><span>care in every pack</span></div>
           </div>
-          <div className="achievement-preview-grid">
-            <div><FiAward /><strong>Quality first</strong><span>Care in every pack</span></div>
-            <div><FiCheckCircle /><strong>Trusted process</strong><span>Checked from farm to home</span></div>
-            <div><FiHeart /><strong>Made for families</strong><span>Sweetness for everyday life</span></div>
+          <div className="achievement-grid">
+            {achievements.map((achievement) => (
+              <article className="achievement-card" key={achievement.title}>
+                <div className="achievement-card-top"><span>{achievement.year}</span><span className="achievement-icon">{achievement.icon}</span></div>
+                <h2>{achievement.title}</h2>
+                <p>{achievement.text}</p>
+              </article>
+            ))}
+          </div>
+          <div className="achievement-note">
+            <p className="section-eyebrow">The promise</p>
+            <h2>Pure sweetness, handled with responsibility.</h2>
+            <p>We keep improving the way we source, check, pack, and serve so every order feels worthy of your home.</p>
           </div>
         </div>
       </section>
 
-      <section className="contact-section">
+      {/* CONTACT */}
+      <section id="contact" className="contact-section">
         <div className="container contact-inner">
           <div>
-            <p className="section-eyebrow">நாங்கள் உதவ இங்கே இருக்கிறோம்</p>
+            <p className="section-eyebrow">We're Here to Help</p>
             <h2>Need help with your order?</h2>
             <p>Reach us for product questions, bulk orders, or delivery support.</p>
           </div>
@@ -165,6 +225,6 @@ export default function Home() {
           </p>
         </div>
       </section>
-    </>
+    </div>
   );
 }
