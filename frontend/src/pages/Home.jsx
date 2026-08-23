@@ -6,8 +6,10 @@ import { fetchCatalog } from "../data/catalog";
 import ProductCard from "../components/ProductCard";
 
 const FEATURED_COUNT = 4;
+const RETRY_DELAY_MS = 1500; // was 3000 — retry faster while server wakes up
 
 const LOADING_QUOTES = [
+  "Waking up our server — almost there.",
   "Sweetening every batch with care — Iniya Sugar.",
   "எங்கள் இனிமை, உங்கள் நம்பிக்கை — Iniya Sugar.",
   "From farm to kitchen, purity you can taste.",
@@ -53,7 +55,7 @@ export default function Home() {
           if (cancelled) return;
           if (!items || items.length === 0) {
             // backend returned empty — keep retrying
-            setTimeout(tryFetch, 3000);
+            setTimeout(tryFetch, RETRY_DELAY_MS);
             return;
           }
           setProducts(items);
@@ -61,8 +63,8 @@ export default function Home() {
         })
         .catch(() => {
           if (cancelled) return;
-          // backend not ready yet — wait a bit and try again
-          setTimeout(tryFetch, 3000);
+          // backend not ready yet (likely cold start) — retry quickly
+          setTimeout(tryFetch, RETRY_DELAY_MS);
         });
     };
 
@@ -73,12 +75,12 @@ export default function Home() {
     };
   }, []);
 
-  // Rotate the loading quote every few seconds while products are loading
+  // Rotate the loading quote every couple seconds while products are loading
   useEffect(() => {
     if (!isLoading) return;
     const timer = setInterval(() => {
       setQuoteIndex((prev) => (prev + 1) % LOADING_QUOTES.length);
-    }, 2500);
+    }, 2000);
     return () => clearInterval(timer);
   }, [isLoading]);
 
