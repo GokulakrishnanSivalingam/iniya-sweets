@@ -1,7 +1,8 @@
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
-const { getProducts } = require("../routes/productRoutes");
+const Product = require("../models/Product");
 const { sendOrderEmail } = require("../utils/orderEmail");
 
 let razorpayInstance = null;
@@ -25,11 +26,18 @@ function getRazorpayInstance() {
 // Recalculate the order total on the server from trusted product prices,
 // rather than trusting the amount sent from the frontend. This prevents
 // price tampering from the client side.
-function calculateTrustedTotal(items = []) {
+async function calculateTrustedTotal(items = []) {
+  const validIds = items
+    .map((item) => item.id)
+    .filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+  const products = await Product.find({ _id: { $in: validIds } });
+  const productMap = new Map(products.map((p) => [String(p._id), p]));
+
   let subtotal = 0;
 
   for (const cartItem of items) {
-    const product = getProducts().find((p) => p.id === cartItem.id);
+    const product = productMap.get(String(cartItem.id));
     if (!product) continue;
     const quantity = Math.max(1, Number(cartItem.quantity) || 1);
     subtotal += product.price * quantity;
@@ -49,7 +57,7 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ message: "Cart items are required" });
     }
 
-    const { total } = calculateTrustedTotal(items);
+    const { total } = await calculateTrustedTotal(items);
 
     if (total <= 0) {
       return res.status(400).json({ message: "Invalid order amount" });
@@ -114,7 +122,7 @@ exports.verifyPayment = async (req, res) => {
     }
 
     // Recompute totals server-side from trusted product prices.
-    const { subtotal, delivery, total } = calculateTrustedTotal(items);
+    const { subtotal, delivery, total } = await calculateTrustedTotal(items);
 
     const order = await Order.create({
       razorpayOrderId: razorpay_order_id,

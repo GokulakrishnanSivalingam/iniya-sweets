@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema(
   {
-    id: { type: Number, required: true },
+    id: { type: String, required: true }, // changed from Number — product ids are Mongo ObjectId strings
     name: { type: String, required: true },
     weight: { type: String, required: true },
     price: { type: Number, required: true },

@@ -5,7 +5,13 @@ import { FiAward, FiCheckCircle, FiHeart, FiUsers, FiMail, FiMapPin, FiPhone } f
 import { fetchCatalog } from "../data/catalog";
 import ProductCard from "../components/ProductCard";
 
-const FEATURED_COUNT = 3;
+const FEATURED_COUNT = 4;
+
+const LOADING_QUOTES = [
+  "Sweetening every batch with care — Iniya Sugar.",
+  "எங்கள் இனிமை, உங்கள் நம்பிக்கை — Iniya Sugar.",
+  "From farm to kitchen, purity you can taste.",
+];
 
 const aboutValues = [
   "Sourced from trusted Tamil Nadu sugarcane farms",
@@ -32,11 +38,49 @@ const achievements = [
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [quoteIndex, setQuoteIndex] = useState(0);
 
   useEffect(() => {
     document.title = "Iniya Sugar | Pure Quality Sugar from Tamil Nadu";
-    fetchCatalog().then(setProducts).catch(() => {});
+    setIsLoading(true);
+
+    let cancelled = false;
+
+    const tryFetch = () => {
+      fetchCatalog()
+        .then((items) => {
+          if (cancelled) return;
+          if (!items || items.length === 0) {
+            // backend returned empty — keep retrying
+            setTimeout(tryFetch, 3000);
+            return;
+          }
+          setProducts(items);
+          setIsLoading(false); // success — stop the loader
+        })
+        .catch(() => {
+          if (cancelled) return;
+          // backend not ready yet — wait a bit and try again
+          setTimeout(tryFetch, 3000);
+        });
+    };
+
+    tryFetch();
+
+    return () => {
+      cancelled = true; // stop retrying if component unmounts
+    };
   }, []);
+
+  // Rotate the loading quote every few seconds while products are loading
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % LOADING_QUOTES.length);
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [isLoading]);
 
   return (
     <div className="home-page">
@@ -78,16 +122,26 @@ export default function Home() {
       <section id="products" className="section section-alt">
         <div className="container">
           <h2 className="section-title">Featured Products</h2>
-          <div className="product-grid">
-            {products.slice(0, FEATURED_COUNT).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-          <div className="section-cta">
-            <Link to="/products" className="btn btn-primary">
-              See More
-            </Link>
-          </div>
+
+          {isLoading ? (
+            <div className="products-loader" role="status" aria-live="polite">
+              <div className="products-loader-spinner" aria-hidden="true" />
+              <p className="products-loader-quote">{LOADING_QUOTES[quoteIndex]}</p>
+            </div>
+          ) : (
+            <>
+              <div className="product-grid">
+                {products.slice(0, FEATURED_COUNT).map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              <div className="section-cta">
+                <Link to="/products" className="btn btn-primary">
+                  See More
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
