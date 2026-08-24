@@ -8,8 +8,13 @@ const { sendOrderEmail } = require("../utils/orderEmail");
 
 let razorpayInstance = null;
 
+// ============================================================
+// RAZORPAY INSTANCE
+// ============================================================
 function getRazorpayInstance() {
-  if (razorpayInstance) return razorpayInstance;
+  if (razorpayInstance) {
+    return razorpayInstance;
+  }
 
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -28,9 +33,9 @@ function getRazorpayInstance() {
   return razorpayInstance;
 }
 
-// ----------------------------------------------------
-// Calculate trusted total from database prices
-// ----------------------------------------------------
+// ============================================================
+// CALCULATE TRUSTED TOTAL
+// ============================================================
 async function calculateTrustedTotal(items = []) {
   const validIds = items
     .map((item) => item.id)
@@ -41,15 +46,22 @@ async function calculateTrustedTotal(items = []) {
   });
 
   const productMap = new Map(
-    products.map((product) => [String(product._id), product])
+    products.map((product) => [
+      String(product._id),
+      product,
+    ])
   );
 
   let subtotal = 0;
 
   for (const cartItem of items) {
-    const product = productMap.get(String(cartItem.id));
+    const product = productMap.get(
+      String(cartItem.id)
+    );
 
-    if (!product) continue;
+    if (!product) {
+      continue;
+    }
 
     const quantity = Math.max(
       1,
@@ -73,10 +85,10 @@ async function calculateTrustedTotal(items = []) {
   };
 }
 
-// ====================================================
+// ============================================================
 // CREATE RAZORPAY ORDER
 // POST /api/payment/create-order
-// ====================================================
+// ============================================================
 exports.createOrder = async (req, res) => {
   try {
     const { items } = req.body;
@@ -88,6 +100,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    // Calculate amount from database prices
     const { total } = await calculateTrustedTotal(items);
 
     if (total <= 0) {
@@ -110,29 +123,29 @@ exports.createOrder = async (req, res) => {
       razorpayOrder.id
     );
 
-    res.json({
+    return res.json({
       success: true,
       orderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
     });
-  } catch (err) {
+  } catch (error) {
     console.error(
-      "❌ Create order error:",
-      err.message
+      "❌ Create Razorpay order error:",
+      error.message
     );
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to create payment order",
     });
   }
 };
 
-// ====================================================
+// ============================================================
 // VERIFY PAYMENT
 // POST /api/payment/verify
-// ====================================================
+// ============================================================
 exports.verifyPayment = async (req, res) => {
   try {
     const {
@@ -143,9 +156,9 @@ exports.verifyPayment = async (req, res) => {
       items,
     } = req.body;
 
-    // ------------------------------------------------
-    // Validate request
-    // ------------------------------------------------
+    // --------------------------------------------------------
+    // Validate payment information
+    // --------------------------------------------------------
     if (
       !razorpay_order_id ||
       !razorpay_payment_id ||
@@ -160,9 +173,9 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    // ------------------------------------------------
-    // Razorpay secret
-    // ------------------------------------------------
+    // --------------------------------------------------------
+    // Validate Razorpay secret
+    // --------------------------------------------------------
     const keySecret =
       process.env.RAZORPAY_KEY_SECRET;
 
@@ -172,9 +185,9 @@ exports.verifyPayment = async (req, res) => {
       );
     }
 
-    // ------------------------------------------------
+    // --------------------------------------------------------
     // Verify Razorpay signature
-    // ------------------------------------------------
+    // --------------------------------------------------------
     const expectedSignature = crypto
       .createHmac("sha256", keySecret)
       .update(
@@ -200,30 +213,44 @@ exports.verifyPayment = async (req, res) => {
       "✅ Razorpay payment signature verified"
     );
 
-    // ------------------------------------------------
-    // Calculate trusted totals
-    // ------------------------------------------------
+    // --------------------------------------------------------
+    // Calculate trusted totals from database
+    // --------------------------------------------------------
     const {
       subtotal,
       delivery,
       total,
     } = await calculateTrustedTotal(items);
 
-    // ------------------------------------------------
+    if (total <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order total",
+      });
+    }
+
+    // --------------------------------------------------------
     // Create order in MongoDB
-    // ------------------------------------------------
+    // --------------------------------------------------------
     const order = await Order.create({
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       razorpaySignature: razorpay_signature,
 
-      customer,
+      customer: {
+        fullName: customer.fullName,
+        mobile: customer.mobile,
+        email: customer.email,
+        address: customer.address,
+        city: customer.city,
+        state: customer.state,
+        pincode: customer.pincode,
+      },
 
       items: items.map((item) => ({
         id: item.id,
         name: item.name,
-        weight:
-          item.weightLabel || item.weight,
+        weight: item.weightLabel || item.weight,
         price: item.price,
         quantity: item.quantity,
       })),
@@ -236,66 +263,62 @@ exports.verifyPayment = async (req, res) => {
     });
 
     console.log(
-      "✅ Order saved:",
+      "✅ Order saved to MongoDB:",
       order._id.toString()
     );
 
-    // =================================================
-    // SEND EMAIL TO ADMIN + CUSTOMER
-    // =================================================
-
+    // ========================================================
+    // SEND EMAILS
+    // ========================================================
     try {
       console.log(
         "📧 Sending order emails..."
       );
 
-      const emailResults =
-        await sendOrderEmail(order);
-
-      emailResults.forEach((result, index) => {
-        const recipient =
-          index === 0
-            ? "ADMIN"
-            : "CUSTOMER";
-
-        if (result.status === "fulfilled") {
-          console.log(
-            `✅ ${recipient} email sent successfully`
-          );
-        } else {
-          console.error(
-            `❌ ${recipient} email failed:`,
-            result.reason?.message ||
-              result.reason
-          );
-        }
-      });
+      console.log(
+        "📧 Owner email:",
+        process.env.ADMIN_EMAIL
+      );
 
       console.log(
-        "📧 Email process completed"
+        "📧 Customer email:",
+        order.customer.email
+      );
+
+      console.log(
+        "📦 Delivery address:",
+        order.customer.address,
+        order.customer.city,
+        order.customer.state,
+        order.customer.pincode
+      );
+
+      await sendOrderEmail(order);
+
+      console.log(
+        "✅ Order emails processed successfully"
       );
     } catch (emailError) {
-      // Email failure should NOT make the paid
-      // order appear to be a failed payment.
+      // Do NOT fail the payment/order because email failed
       console.error(
-        "❌ Order email error:",
-        emailError.message
+        "❌ Order email failed:",
+        emailError
       );
     }
 
-    // ------------------------------------------------
-    // Return successful response
-    // ------------------------------------------------
+    // --------------------------------------------------------
+    // Successful response
+    // --------------------------------------------------------
     return res.json({
       success: true,
       message:
         "Payment verified and order placed successfully",
       orderId: order._id,
     });
-  } catch (err) {
+  } catch (error) {
     console.error(
       "❌ Verify payment error:",
-      err.message
+      error.message
     );
 
     return res.status(500).json({
