@@ -1,0 +1,50 @@
+# Vercel Web Analytics Installation
+
+Successfully installed and configured Vercel Web Analytics for this React + Vite project.
+
+## Changes Made
+
+### 1. Package Installation
+- Installed `@vercel/analytics@^2.0.1` using npm
+- Package added to dependencies in `package.json`
+- Updated `package-lock.json` with new dependency tree
+
+### 2. Analytics Integration
+Modified `frontend/src/App.jsx`:
+- Added import statement: `import { Analytics } from "@vercel/analytics/react";`
+- Added `<Analytics />` component at the end of the main app container, following Vercel's official React/Vite documentation
+
+## Implementation Details
+
+Following the official Vercel documentation (https://vercel.com/docs/analytics/quickstart), I implemented the framework-specific instructions for React/Vite projects:
+
+1. **Framework Detected**: React 18.3.1 with Vite 5.4.1
+2. **Package Manager**: npm (based on existing package-lock.json)
+3. **Integration Pattern**: Added Analytics component to the root App component, ensuring it's rendered on all pages
+4. **Placement**: The Analytics component is placed after all other content (after ToastNotification) to avoid interfering with existing functionality
+
+## Verification
+
+- ✅ Build completed successfully (`npm run build`)
+- ✅ No TypeScript/ESLint errors
+- ✅ Bundle size: 227.81 kB (gzip: 71.56 kB)
+- ✅ All existing functionality preserved
+
+## Next Steps (For Repository Owner)
+
+To activate analytics data collection:
+
+1. Deploy this change to Vercel
+2. In the Vercel dashboard, navigate to your project's Analytics tab
+3. Click the "Enable" button to activate Web Analytics
+4. After deployment, verify the integration by checking the browser's Network tab for analytics requests to `/_vercel/insights/`
+5. Analytics data will appear in the dashboard within a few days after users visit your site
+
+## Technical Notes
+
+- The Analytics component is lightweight and automatically handles:
+  - Page view tracking
+  - Route changes (works seamlessly with react-router-dom)
+  - Performance metrics
+- No additional configuration is required for basic functionality
+- The component will only send data in production builds (Vercel deployments)
